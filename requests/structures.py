@@ -44,6 +44,13 @@ class CaseInsensitiveDict(MutableMapping):
         self.update(data, **kwargs)
 
     def __setitem__(self, key, value):
+        """
+        the key part of creating a case insensitive dict is change all the
+        key to lowercase
+        :param key:
+        :param value:
+        :return:
+        """
         # Use the lowercased key for lookups, but store the actual
         # key alongside the value.
         self._store[key.lower()] = (key, value)

@@ -119,7 +119,10 @@ def super_len(o):
             fileno = o.fileno()
         except io.UnsupportedOperation:
             pass
+        # else block is entered if there no exception occur
         else:
+            # os.fstat(): Perform a stat system call on the given file descriptor.
+            # st_mode=33206, st_ino=281474976726432, st_dev=2751654107, st_nlink=1, st_uid=0, st_gid=0, st_size=13554...
             total_length = os.fstat(fileno).st_size
 
             # Having used fstat to determine the file length, we need to
@@ -137,6 +140,7 @@ def super_len(o):
 
     if hasattr(o, 'tell'):
         try:
+            # if read 27 bytes, then current position is 28
             current_position = o.tell()
         except (OSError, IOError):
             # This can happen in some weird situations, such as when the file
@@ -302,6 +306,7 @@ def to_key_val_list(value):
     if isinstance(value, (str, bytes, bool, int)):
         raise ValueError('cannot encode objects that are not 2-tuples')
 
+    # list([('key','value')]) ---> [('key','value')], and it's not of Mapping type
     if isinstance(value, Mapping):
         value = value.items()
 
@@ -909,9 +914,12 @@ def get_auth_from_url(url):
 
     :rtype: (str,str)
     """
+    # url = 'http://username:password@example.com/'
     parsed = urlparse(url)
 
     try:
+        # parsed.username is username, password is password
+        # This isn't standard HTTP auth, though, it's an application-specific thing
         auth = (unquote(parsed.username), unquote(parsed.password))
     except (AttributeError, TypeError):
         auth = ('', '')

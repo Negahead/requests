@@ -122,8 +122,7 @@ def extract_cookies_to_jar(jar, request, response):
     :param request: our own requests.Request object
     :param response: urllib3.HTTPResponse object
     """
-    if not (hasattr(response, '_original_response') and
-            response._original_response):
+    if not (hasattr(response, '_original_response') and response._original_response):
         return
     # the _original_response field is the wrapped httplib.HTTPResponse object,
     req = MockRequest(request)
@@ -135,7 +134,7 @@ def extract_cookies_to_jar(jar, request, response):
 def get_cookie_header(jar, request):
     """
     Produce an appropriate Cookie header string to be sent with `request`, or None.
-
+    jar : CookieJar type
     :rtype: str
     """
     r = MockRequest(request)

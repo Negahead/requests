@@ -63,6 +63,8 @@ class BaseAdapter(object):
         """Sends PreparedRequest object. Returns Response object.
 
         :param request: The :class:`PreparedRequest <PreparedRequest>` being sent.
+        # You want to stream the request file data to multiple upstream services, copying the data stream.
+        One of these upstream services is a subprocess.
         :param stream: (optional) Whether to stream the request content.
         :param timeout: (optional) How long to wait for the server to send
             data before giving up, as a float, or a :ref:`(connect timeout,
@@ -116,6 +118,9 @@ class HTTPAdapter(BaseAdapter):
         if max_retries == DEFAULT_RETRIES:
             self.max_retries = Retry(0, read=False)
         else:
+            # retry_counts = (1, 2, 3, 0, 0, None)
+            # retry_counts = list(filter(None, retry_counts))
+            # retry_counts is [1, 2, 3]
             self.max_retries = Retry.from_int(max_retries)
         self.config = {}
         self.proxy_manager = {}

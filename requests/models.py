@@ -60,10 +60,15 @@ ITER_CHUNK_SIZE = 512
 class RequestEncodingMixin(object):
     @property
     def path_url(self):
-        """Build the path URL to use."""
+        """
+        Build the path URL to use.
+        So this returns '/douban?name=value'
+        """
 
         url = []
 
+        # urlsplit('https://www.baidu.com/douban?name=value#docker')
+        # SplitResult(scheme='https', netloc='www.baidu.com', path='/douban', query='name=value', fragment='docker')
         p = urlsplit(self.url)
 
         path = p.path
@@ -86,6 +91,9 @@ class RequestEncodingMixin(object):
         Will successfully encode parameters when passed as a dict or a list of
         2-tuples. Order is retained if data is a list of 2-tuples but arbitrary
         if parameters are supplied as a dict.
+
+        >>> urlencode([('lol', 'faker'), ('overwatch', 'shadow burn')])
+        >>> 'lol=faker&overwatch=shadow+burn'
         """
 
         if isinstance(data, (str, bytes)):
@@ -102,6 +110,10 @@ class RequestEncodingMixin(object):
                         result.append(
                             (k.encode('utf-8') if isinstance(k, str) else k,
                              v.encode('utf-8') if isinstance(v, str) else v))
+
+            # params = {'q': 'Python URL encoding', 'as_sitesearch': 'www.urlencoder.io'}
+            # urllib.parse.urlencode(params)
+            # 'q=Python+URL+encoding&as_sitesearch=www.urlencoder.io'
             return urlencode(result, doseq=True)
         else:
             return data
@@ -116,9 +128,9 @@ class RequestEncodingMixin(object):
         The tuples may be 2-tuples (filename, fileobj), 3-tuples (filename, fileobj, contentype)
         or 4-tuples (filename, fileobj, contentype, custom_headers).
         """
-        if (not files):
+        if not files:
             raise ValueError("Files must be provided.")
-        elif isinstance(data, basestring):
+        elif isinstance(data, basestring):  # (str, bytes)
             raise ValueError("Data must not be a string.")
 
         new_fields = []
@@ -163,7 +175,7 @@ class RequestEncodingMixin(object):
                 fdata = fp
 
             rf = RequestField(name=k, data=fdata, filename=fn, headers=fh)
-            rf.make_multipart(content_type=ft)
+            rf.make_multipart(content_type=ft)  # Makes this request field into a multipart request field.
             new_fields.append(rf)
 
         body, content_type = encode_multipart_formdata(new_fields)
@@ -300,13 +312,12 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         #: request body to send to the server.
         self.body = None
         #: dictionary of callback hooks, for internal usage.
-        self.hooks = default_hooks()
+        self.hooks = default_hooks()  # {'response': []}
         #: integer denoting starting position of a readable file-like body.
         self._body_position = None
 
-    def prepare(self,
-            method=None, url=None, headers=None, files=None, data=None,
-            params=None, auth=None, cookies=None, hooks=None, json=None):
+    def prepare(self, method=None, url=None, headers=None, files=None, data=None,
+                params=None, auth=None, cookies=None, hooks=None, json=None):
         """Prepares the entire request with the given parameters."""
 
         self.prepare_method(method)
@@ -376,12 +387,14 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
 
         # Support for unicode domain names and paths.
         try:
+            # parse_url('http://www.baidu.com:80/path?name=value#seg')
+            # scheme='http', auth=None, host='www.baidu.com', port=80, path='/path', query='name=value', fragment='seg'
             scheme, auth, host, port, path, query, fragment = parse_url(url)
         except LocationParseError as e:
             raise InvalidURL(*e.args)
 
         if not scheme:
-            error = ("Invalid URL {0!r}: No schema supplied. Perhaps you meant http://{0}?")
+            error = "Invalid URL {0!r}: No schema supplied. Perhaps you meant http://{0}?"
             error = error.format(to_native_string(url, 'utf8'))
 
             raise MissingSchema(error)
@@ -440,7 +453,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
 
     def prepare_headers(self, headers):
         """Prepares the given HTTP headers."""
-
+        # header is in the format (name, value).
         self.headers = CaseInsensitiveDict()
         if headers:
             for header in headers.items():
@@ -459,10 +472,13 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         body = None
         content_type = None
 
+        # data 和 json 都不为空
         if not data and json is not None:
             # urllib3 requires a bytes-like body. Python 2's json.dumps
             # provides this natively, but Python 3 gives a Unicode string.
             content_type = 'application/json'
+            # json.dumps({'name':'dopa','game':'LOL'})
+            # '{"name": "dopa", "game": "LOL"}', type is str
             body = complexjson.dumps(json)
             if not isinstance(body, bytes):
                 body = body.encode('utf-8')
@@ -545,7 +561,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
                 auth = HTTPBasicAuth(*auth)
 
             # Allow auth to make its changes.
-            r = auth(self)
+            r = auth(self)  # r.headers['Authorization'] == 'Basic TmVnYWhlYWQ6MjM0MjM0'
 
             # Update self to reflect the auth changes.
             self.__dict__.update(r.__dict__)
@@ -569,7 +585,7 @@ class PreparedRequest(RequestEncodingMixin, RequestHooksMixin):
         else:
             self._cookies = cookiejar_from_dict(cookies)
 
-        cookie_header = get_cookie_header(self._cookies, self)
+        cookie_header = get_cookie_header(self._cookies, self)  # str type 'name=Will'
         if cookie_header is not None:
             self.headers['Cookie'] = cookie_header
 
@@ -646,6 +662,7 @@ class Response(object):
     def __exit__(self, *args):
         self.close()
 
+    # pickel dumps() and loads
     def __getstate__(self):
         # Consume everything; accessing the content attribute makes
         # sure the content has been fully read.
@@ -709,12 +726,12 @@ class Response(object):
         """True if this Response is a well-formed HTTP redirect that could have
         been processed automatically (by :meth:`Session.resolve_redirects`).
         """
-        return ('location' in self.headers and self.status_code in REDIRECT_STATI)
+        return 'location' in self.headers and self.status_code in REDIRECT_STATI
 
     @property
     def is_permanent_redirect(self):
         """True if this Response one of the permanent versions of redirect."""
-        return ('location' in self.headers and self.status_code in (codes.moved_permanently, codes.permanent_redirect))
+        return 'location' in self.headers and self.status_code in (codes.moved_permanently, codes.permanent_redirect)
 
     @property
     def next(self):

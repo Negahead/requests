@@ -93,6 +93,7 @@ class HTTPBasicAuth(AuthBase):
         return not self == other
 
     def __call__(self, r):
+        # 'Basic TmVnYWhlYWQ6MjM0MjM0'
         r.headers['Authorization'] = _basic_auth_str(self.username, self.password)
         return r
 

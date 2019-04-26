@@ -418,6 +418,11 @@ class Session(SessionRedirectMixin):
         self.mount('http://', HTTPAdapter())
 
     def __enter__(self):
+        """
+        Using these magic methods (__enter__, __exit__) allows you to implement
+        objects which can be used easily with the `with` statement.
+        :return:
+        """
         return self
 
     def __exit__(self, *args):
